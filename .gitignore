@@ -1,0 +1,6 @@
+*.zip
+*.csv
+basin_join_pfas/
+.ipynb_checkpoints/
+*.shx
+*.shp
