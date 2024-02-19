@@ -13,9 +13,9 @@ print(f'range_length x: {range_length_x}, range_length y: {range_length_y}, squa
 cnt = 0
 
 
-for i in range(0, range_length_x, square_size): 
+for i in np.arange(0, range_length_x, square_size): 
     
-    for j in range(0, range_length_y, square_size):
+    for j in np.arange(0, range_length_y, square_size):
         print(i, j) # should not go that far
         temp = np.empty((square_size, square_size), dtype=object) # dont need to initialize here
         for x in range(square_size):
