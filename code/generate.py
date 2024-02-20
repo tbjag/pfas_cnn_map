@@ -3,9 +3,9 @@ import geopandas as gpd
 import numpy as np
 from shapely.geometry import Point
 import argparse
-from collections import deque
 
-class GenerateShape:
+
+class GenerateData:
     def __init__(self, granularity, length, save_interval, checkpoint, output_file):
         self.granularity = granularity
         self.length = length
@@ -13,32 +13,30 @@ class GenerateShape:
         self.output_file = output_file
         self.base = None
         self.checkpoint = checkpoint
+        self.counter = 1
+        self.grid = []
+        self.total_cells = 0
 
     def run(self):
         '''
         take overlayed image and generates squares for ML
         '''
         xmin, ymin, xmax, ymax = self.base.total_bounds
-        x_grid = np.arange(xmin, xmax, self.granularity)
-        y_grid = np.arange(ymin, ymax, self.granularity)
+        x_grid = np.arange(xmin, xmax, self.granularity * self.length)
+        y_grid = np.arange(ymin, ymax, self.granularity * self.length)
 
-        print(f'x size: {len(x_grid)}, y size: {len(y_grid)}, total number of cells: {len(y_grid) * len(x_grid)}')
+        self.total_cells = len(y_grid) * len(x_grid)
+        print(f'x size: {len(x_grid)}, y size: {len(y_grid)}, total number of cells: {self.total_cells}')
 
-        # assume number is odd
-        lower_bound = self.length//2 * -1
-        upper_bound = self.length//2 + 1
-
-        print(f'range: {lower_bound, upper_bound}')
+        print(f'range: {0, self.length}')
         print('starting run...')
 
-        counter = 0
-        grid = []
         cache = self.base.iloc[0]
 
         for x in x_grid:
             for y in y_grid:
-                if self.checkpoint > counter: # checkpointing
-                    counter += 1
+                if self.checkpoint > self.counter: # checkpointing
+                    self.counter += 1
                     continue
                 curr = np.empty((self.length, self.length), dtype=object)
                 for i in range(self.length):
@@ -55,17 +53,22 @@ class GenerateShape:
                                         cache = basin
                                         break # stop at first one
                             curr[i, j] = {'longitude': x, 'latitude' : y, 'pfas': pfas_val}
-                grid.append(curr)
+                self.grid.append(curr)
 
                 # save here
-                if counter % self.save_interval == 0:
-                    with open(self.output_file, 'ab') as f:
-                        np.save(f, np.array(grid)) # save here
-                    print(f'saved at {counter}')
-                    grid = []
-                counter += 1
+                if self.counter % self.save_interval == 0:
+                    print(len(self.grid))
+                    self.save_grid()
+                    self.grid = []
+                self.counter += 1
         
         print('finished run')
+
+    def save_grid(self):
+        file_name = f'{self.output_file}_{self.counter}.npy'
+        with open(file_name, 'wb') as f:
+            np.save(f, np.array(self.grid))
+        print(f'saved at {self.counter} as {file_name} | {self.counter/self.total_cells * 100:.2f}% completed')
         
 
     def setup(self, input_shapefile, csv):
@@ -99,24 +102,25 @@ class GenerateShape:
 
         map_boundary = result.total_bounds
         print("Map Boundary:", map_boundary)
+        result.dropna(subset=['PFAS_total'], inplace=True) # drop any basins that have nan vals
         self.base = result
         print('finished setup')
         
 def main():
     parser = argparse.ArgumentParser('process map data')
     parser.add_argument('-length', type=int, default=7)
-    parser.add_argument('-grain', type=float, default=0.1)
+    parser.add_argument('-grain', type=float, default=0.01)
     parser.add_argument('-input', type=str, default='../stanford-sr396hp9621-shapefile.zip')
     parser.add_argument('-csv', type=str, default='../pfas_clean.csv')
-    parser.add_argument('-output', type=str, default='generate.npy')
-    parser.add_argument('-interval', type=int, default=10)
+    parser.add_argument('-output', type=str, default='data/generate')
+    parser.add_argument('-interval', type=int, default=100)
     parser.add_argument('-checkpoint', type=int, default=0)
     
     args = parser.parse_args()
     print(args)
     # TODO check number is odd
 
-    x = GenerateShape(args.grain, args.length, args.interval, args.checkpoint, args.output)
+    x = GenerateData(args.grain, args.length, args.interval, args.checkpoint, args.output)
     x.setup(args.input, args.csv)
     x.run()
 
