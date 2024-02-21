@@ -45,7 +45,7 @@ class GenerateData:
                         if xmin <= curr_x <= xmax and ymin <= curr_y <= ymax: # bounds check
                             curr_point, pfas_val = Point(curr_x, curr_y), 0
                             if curr_point.intersects(cache['geometry']):
-                                pfas_val = ['PFAS_total']
+                                pfas_val = cache['PFAS_total']
                             else:
                                 for _, basin in self.base.iterrows(): # search through basins
                                     if curr_point.intersects(basin['geometry']):

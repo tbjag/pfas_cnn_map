@@ -34,7 +34,7 @@ def main():
     parser.add_argument('-grain', type=float, default=0.1)
     parser.add_argument('-input', type=str, default='data')
     parser.add_argument('-output', type=str, default='data/generate')
-    parser.add_argument('-interval', type=int, default=5)
+    parser.add_argument('-interval', type=int, default=100)
     parser.add_argument('-checkpoint', type=int, default=0)
     
     args = parser.parse_args()
@@ -46,7 +46,11 @@ def main():
     #     print(h.shape)
 
     x = ProcessData(args.input, args.interval)
-    print(x.load().shape)
+    data = x.load()
+
+
+    print(data[700])
+
 
 
 if __name__ == '__main__':
