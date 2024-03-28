@@ -49,9 +49,6 @@ def main():
     data = x.load()
 
 
-    print(data[700])
-
-
 
 if __name__ == '__main__':
     main()

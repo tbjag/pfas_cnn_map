@@ -52,7 +52,7 @@ class GenerateData:
                                         pfas_val = basin['PFAS_total'] 
                                         cache = basin
                                         break # stop at first one
-                            curr[i, j] = {'longitude': x, 'latitude' : y, 'pfas': pfas_val}
+                            curr[i, j] = {'longitude': curr_x, 'latitude' : curr_y, 'pfas': pfas_val}
                 self.grid.append(curr)
 
                 # save here
